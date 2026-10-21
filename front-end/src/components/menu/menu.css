@@ -5,39 +5,36 @@
   align-items: center;
   justify-content: center;
   pointer-events: auto;
-  /* Fonte serifada clássica remete a jogos épicos, 
-     se o projeto tiver uma fonte específica importada, ela assumirá aqui. */
   font-family: var(--font-title);
   color: var(--color-text-primary);
-  padding: 1rem 2rem; /* Altura diminuída */
-  
-  /* ADICIONADO: Fundo translúcido escuro (Glassmorphism) e centralização na página */
+  padding: 1rem 1.5rem;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 700px; /* Largura aumentada */
+  width: min(88%, 640px);
+  max-height: calc(100dvh - 5rem);
+  overflow-y: auto;
   background: var(--color-bg-overlay);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Header opcional do menu (Título principal) */
 .game-menu-header {
   text-align: center;
-  margin-bottom: 2rem; /* Margem diminuída */
+  margin-bottom: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .game-menu-title {
-  font-size: clamp(1.5rem, 3.5vw, 2.5rem); /* Tamanho do título reduzido */
-  letter-spacing: 0.2em;
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-text-primary);
   margin: 0;
@@ -46,8 +43,8 @@
 }
 
 .game-menu-subtitle {
-  font-size: 0.9rem; /* Tamanho do subtitulo reduzido */
-  letter-spacing: 6px;
+  font-size: 0.85rem;
+  letter-spacing: 5px;
   text-transform: uppercase;
   color: #a89f91;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
@@ -55,7 +52,7 @@
 
 /* Linha divisória com gradiente */
 .game-menu-divider {
-  width: 250px;
+  width: min(220px, 80%);
   height: 1px;
   background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 80%, transparent) 0%, transparent 100%);
   margin-top: 1rem;
@@ -66,7 +63,7 @@
 /* Navegação e lista */
 .game-menu-nav {
   width: 100%;
-  max-width: 600px;
+  max-width: 100%;
 }
 
 .game-menu-list {
@@ -76,7 +73,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.2rem;
+  gap: 0.75rem;
 }
 
 /* Item do menu: container flex que se ajusta ao texto */
@@ -87,7 +84,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  padding: 0.8rem 1rem;
+  padding: 0.65rem 0.85rem;
 }
 
 /* Texto do botão ou âncora */
@@ -97,8 +94,8 @@
   text-decoration: none;
   color: var(--color-muted);
   font-family: inherit;
-  font-size: 0.8rem;
-  letter-spacing: 4px;
+  font-size: 0.78rem;
+  letter-spacing: 3px;
   text-transform: uppercase;
   cursor: pointer;
   padding: 0 1rem;
@@ -195,6 +192,65 @@
   box-shadow: 
     0 0 10px 2px rgba(230, 126, 34, 0.9),
     0 0 4px 1px rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 600px) {
+  .game-menu-container {
+    width: calc(100% - 2rem);
+    max-height: calc(100dvh - 5rem);
+    padding: 1rem;
+    border-radius: 14px;
+  }
+
+  .game-menu-header {
+    margin-bottom: 0.9rem;
+  }
+
+  .game-menu-title {
+    font-size: clamp(1.25rem, 6vw, 1.8rem);
+    letter-spacing: 0.12em;
+  }
+
+  .game-menu-subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.25rem;
+  }
+
+  .game-menu-list {
+    gap: 0.4rem;
+  }
+
+  .game-menu-item {
+    padding: 0.5rem 0.65rem;
+  }
+
+  .menu-item-text {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+  }
+
+  .game-menu-item.hovered .menu-item-text,
+  .game-menu-item:focus-within .menu-item-text {
+    letter-spacing: 0.18em;
+  }
+}
+
+@media (max-height: 600px) {
+  .game-menu-container {
+    max-height: calc(100dvh - 2rem);
+  }
+
+  .game-menu-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .game-menu-list {
+    gap: 0.25rem;
+  }
+
+  .game-menu-item {
+    padding-block: 0.4rem;
+  }
 }
 
 /* Prevenção de motion sickness */
