@@ -7,5 +7,4 @@ import br.com.joaolisboa.portfolio_profissional.experience.model.Experience;
 
 @Repository 
 public interface ExperienceRepository extends JpaRepository<Experience, Integer>{
-
 }
