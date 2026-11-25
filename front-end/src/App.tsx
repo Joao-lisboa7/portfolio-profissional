@@ -1,5 +1,11 @@
+import { Outlet } from 'react-router';
+
 function App() {
-  return <main className="app-page">Página default</main>;
+  return (
+    <main className="app-page">
+      <Outlet />
+    </main>
+  );
 }
 
-export default App
+export default App;

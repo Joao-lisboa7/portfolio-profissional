@@ -1,6 +1,6 @@
 import './home.css';
 import Navbar from '../../components/navbar/Navbar';
-import GameMenu from '../../components/menu/menu';
+import GameMenu from '../../components/menu/Menu';
 
 function Home (){
   const menuItems = [
