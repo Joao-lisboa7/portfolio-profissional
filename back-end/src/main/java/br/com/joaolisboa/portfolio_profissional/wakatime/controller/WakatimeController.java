@@ -1,8 +1,8 @@
 package br.com.joaolisboa.portfolio_profissional.wakatime.controller;
 
-import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakatimeAllTimeDTO;
-import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakatimeStatsDTO;
+import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakaTimeStatsResponse;
 import br.com.joaolisboa.portfolio_profissional.wakatime.service.WakatimeService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,22 +17,14 @@ public class WakatimeController {
         this.wakatimeService = wakatimeService;
     }
 
-    @GetMapping("/stats")
-    public ResponseEntity<WakatimeStatsDTO> getStats(
-            @RequestParam(name = "range", defaultValue = "last_7_days") String range) {
-        WakatimeStatsDTO stats = wakatimeService.getStats(range);
-        return ResponseEntity.ok(stats);
-    }
-
-    @GetMapping("/stats/{range}")
-    public ResponseEntity<WakatimeStatsDTO> getStatsByPath(@PathVariable String range) {
-        WakatimeStatsDTO stats = wakatimeService.getStats(range);
-        return ResponseEntity.ok(stats);
-    }
-
-    @GetMapping("/all-time")
-    public ResponseEntity<WakatimeAllTimeDTO> getAllTime() {
-        WakatimeAllTimeDTO allTime = wakatimeService.getAllTime();
-        return ResponseEntity.ok(allTime);
+    @GetMapping
+    public ResponseEntity<WakaTimeStatsResponse> getStats(
+            @RequestParam(name = "range", defaultValue = "last_30_days") String range) {
+        try {
+            WakaTimeStatsResponse stats = wakatimeService.getWakaTimeStats(range);
+            return ResponseEntity.ok(stats);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
     }
 }

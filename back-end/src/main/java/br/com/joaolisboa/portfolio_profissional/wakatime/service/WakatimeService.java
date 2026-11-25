@@ -1,7 +1,6 @@
 package br.com.joaolisboa.portfolio_profissional.wakatime.service;
 
-import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakatimeAllTimeDTO;
-import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakatimeStatsDTO;
+import br.com.joaolisboa.portfolio_profissional.wakatime.dto.WakaTimeStatsResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +11,13 @@ import org.springframework.web.client.RestClient;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -24,100 +27,295 @@ public class WakatimeService {
 
     private final RestClient restClient;
     private final String apiKey;
+    private final List<String> privateProjects;
     private final long cacheTtlMillis;
-
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     public WakatimeService(
             @Value("${wakatime.api.base-url:https://wakatime.com/api/v1}") String baseUrl,
             @Value("${wakatime.api.key:}") String apiKey,
-            @Value("${wakatime.cache.ttl-minutes:30}") long ttlMinutes) {
+            @Value("${wakatime.cache.ttl-minutes:180}") long ttlMinutes,
+            @Value("${WAKATIME_PRIVATE_PROJECTS:}") String privateProjectsEnv) {
         this.apiKey = apiKey != null ? apiKey.trim() : "";
         this.cacheTtlMillis = ttlMinutes * 60 * 1000L;
-        this.restClient = RestClient.builder()
-                .baseUrl(baseUrl)
-                .build();
+        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        this.privateProjects = new ArrayList<>();
+        if (privateProjectsEnv != null && !privateProjectsEnv.isBlank()) {
+            for (String p : privateProjectsEnv.split(",")) {
+                String t = p.trim();
+                if (!t.isEmpty()) privateProjects.add(t.toLowerCase());
+            }
+        }
     }
 
-    public WakatimeStatsDTO getStats(String range) {
-        String effectiveRange = (range == null || range.isBlank()) ? "last_7_days" : range.trim();
-        String cacheKey = "stats_" + effectiveRange;
-
-        CacheEntry entry = cache.get(cacheKey);
-        if (entry != null && !entry.isExpired()) {
-            log.debug("Retornando WakatimeStats [{}] do cache em memória", effectiveRange);
-            return (WakatimeStatsDTO) entry.data();
+    @SuppressWarnings("unchecked")
+    public WakaTimeStatsResponse getWakaTimeStats(String range) {
+        String effectiveRange = (range == null || range.isBlank()) ? "last_30_days" : range.trim();
+        CacheEntry cached = cache.get(effectiveRange);
+        if (cached != null && !cached.isExpired()) {
+            return cached.data();
         }
-
         if (apiKey.isEmpty()) {
-            log.warn("Wakatime API key não configurada. Retornando dados demonstrativos para desenvolvimento.");
-            WakatimeStatsDTO fallback = createMockStats(effectiveRange);
-            cache.put(cacheKey, new CacheEntry(fallback, Instant.now().toEpochMilli() + cacheTtlMillis));
-            return fallback;
+            log.error("WAKATIME_API_KEY ausente.");
+            throw new IllegalStateException("WAKATIME_API_KEY ausente");
         }
-
         try {
-            log.info("Buscando estatísticas do Wakatime na API externa para período: {}", effectiveRange);
-            String authHeader = buildAuthHeader(apiKey);
+            String auth = buildAuthHeader(apiKey);
+            CompletableFuture<Map<String, Object>> statsF = CompletableFuture.supplyAsync(() ->
+                    fetchMap("/users/current/stats/" + effectiveRange, auth));
+            CompletableFuture<Map<String, Object>> summariesF = CompletableFuture.supplyAsync(() ->
+                    fetchMap("/users/current/summaries?start=" + startDate(effectiveRange) + "&end=" + LocalDate.now(ZoneOffset.UTC), auth));
+            CompletableFuture<Map<String, Object>> insightsF = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return fetchMap("/users/current/insights/ai_days/" + effectiveRange, auth);
+                } catch (Exception e) {
+                    log.warn("Insights indisponivel ({}): {}", effectiveRange, e.getMessage());
+                    return Map.of();
+                }
+            });
 
-            WakatimeStatsDTO response = restClient.get()
-                    .uri("/users/current/stats/{range}", effectiveRange)
-                    .header(HttpHeaders.AUTHORIZATION, authHeader)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, (req, res) -> {
-                        log.error("Erro ao chamar API do WakaTime: status {}", res.getStatusCode());
-                    })
-                    .body(WakatimeStatsDTO.class);
-
-            if (response != null && response.getData() != null) {
-                cache.put(cacheKey, new CacheEntry(response, Instant.now().toEpochMilli() + cacheTtlMillis));
-                return response;
-            }
+            CompletableFuture.allOf(statsF, summariesF, insightsF).join();
+            WakaTimeStatsResponse resp = mapResponse(effectiveRange, statsF.get(), summariesF.get(), insightsF.get());
+            cache.put(effectiveRange, new CacheEntry(resp, Instant.now().toEpochMilli() + cacheTtlMillis));
+            return resp;
         } catch (Exception ex) {
-            log.error("Falha ao consultar Wakatime stats ({}). Motivo: {}", effectiveRange, ex.getMessage());
+            log.error("Falha ao consultar WakaTime: {}", ex.getMessage());
+            if (cached != null) return cached.data();
+            return degraded(effectiveRange);
         }
-
-        return createMockStats(effectiveRange);
     }
 
-    public WakatimeAllTimeDTO getAllTime() {
-        String cacheKey = "all_time";
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> fetchMap(String path, String auth) {
+        return restClient.get().uri(path)
+                .header(HttpHeaders.AUTHORIZATION, auth)
+                .header(HttpHeaders.ACCEPT, "application/json")
+                .header("User-Agent", "portfolio-profissional/1.0")
+                .retrieve().onStatus(HttpStatusCode::isError, (req, res) -> {
+                    String body = "";
+                    try { body = new String(res.getBody().readAllBytes()); } catch (Exception ignored) {}
+                    log.error("WakaTime erro {} em {}: {}", res.getStatusCode(), path, body);
+                    throw new RuntimeException("HTTP " + res.getStatusCode() + " em " + path);
+                }).body(Map.class);
+    }
 
-        CacheEntry entry = cache.get(cacheKey);
-        if (entry != null && !entry.isExpired()) {
-            log.debug("Retornando WakatimeAllTime do cache em memória");
-            return (WakatimeAllTimeDTO) entry.data();
-        }
+    private LocalDate startDate(String range) {
+        LocalDate end = LocalDate.now(ZoneOffset.UTC);
+        return range.equals("last_30_days") ? end.minusDays(30) : end.minusMonths(24);
+    }
 
-        if (apiKey.isEmpty()) {
-            log.warn("Wakatime API key não configurada. Retornando dados all-time demonstrativos.");
-            WakatimeAllTimeDTO fallback = createMockAllTime();
-            cache.put(cacheKey, new CacheEntry(fallback, Instant.now().toEpochMilli() + cacheTtlMillis));
-            return fallback;
-        }
+    @SuppressWarnings("unchecked")
+    private WakaTimeStatsResponse mapResponse(String range, Map<String, Object> stats, Map<String, Object> summaries, Map<String, Object> insights) {
+        WakaTimeStatsResponse r = new WakaTimeStatsResponse();
+        r.range = range;
+        r.updatedAt = Instant.now().toString();
+        Map<String, Object> data = (Map<String, Object>) stats.getOrDefault("data", Map.of());
 
-        try {
-            log.info("Buscando all_time_since_today do Wakatime na API externa");
-            String authHeader = buildAuthHeader(apiKey);
+        r.overview = new WakaTimeStatsResponse.Overview();
+        r.overview.totalTimeText = str(data, "human_readable_total");
+        r.overview.totalSeconds = (long) dbl(data, "total_seconds");
+        r.overview.dailyAverageText = str(data, "human_readable_daily_average");
+        r.overview.dailyAverageSeconds = (long) dbl(data, "daily_average");
+        r.overview.activeDays = (int) dbl(data, "days_including_holidays");
+        if (r.overview.activeDays == 0) r.overview.activeDays = (int) dbl(data, "days");
 
-            WakatimeAllTimeDTO response = restClient.get()
-                    .uri("/users/current/all_time_since_today")
-                    .header(HttpHeaders.AUTHORIZATION, authHeader)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, (req, res) -> {
-                        log.error("Erro ao chamar Wakatime all-time: status {}", res.getStatusCode());
-                    })
-                    .body(WakatimeAllTimeDTO.class);
-
-            if (response != null && response.getData() != null) {
-                cache.put(cacheKey, new CacheEntry(response, Instant.now().toEpochMilli() + cacheTtlMillis));
-                return response;
+        r.overview.topProject = null;
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) data.getOrDefault("projects", List.of());
+        double privPct = 0; long privSec = 0;
+        r.projects = new ArrayList<>();
+        for (Map<String, Object> p : projects) {
+            String name = str(p, "name");
+            if (isPrivate(name)) {
+                privPct += dbl(p, "percent");
+                privSec += (long) dbl(p, "total_seconds");
+            } else {
+                WakaTimeStatsResponse.Project pr = new WakaTimeStatsResponse.Project();
+                pr.name = name;
+                pr.percent = dbl(p, "percent");
+                pr.timeText = str(p, "text");
+                pr.isPrivate = false;
+                r.projects.add(pr);
             }
-        } catch (Exception ex) {
-            log.error("Falha ao consultar Wakatime all-time. Motivo: {}", ex.getMessage());
+        }
+        if (privPct > 0 || privSec > 0) {
+            WakaTimeStatsResponse.Project pr = new WakaTimeStatsResponse.Project();
+            pr.name = "Projetos Privados";
+            pr.percent = privPct;
+            pr.timeText = "";
+            pr.isPrivate = true;
+            r.projects.add(pr);
+        }
+        for (Map<String, Object> p : projects) {
+            String name = str(p, "name");
+            if (isPrivate(name)) continue;
+            WakaTimeStatsResponse.TopProject tp = new WakaTimeStatsResponse.TopProject();
+            tp.name = name;
+            tp.timeText = str(p, "text");
+            tp.percent = dbl(p, "percent");
+            r.overview.topProject = tp;
+            break;
         }
 
-        return createMockAllTime();
+        r.aiMetrics = new WakaTimeStatsResponse.AiMetrics();
+        long aiAdd = (long) dbl(data, "ai_additions");
+        long aiDel = (long) dbl(data, "ai_deletions");
+        long huAdd = (long) dbl(data, "human_additions");
+        long huDel = (long) dbl(data, "human_deletions");
+        r.aiMetrics.aiAdditions = aiAdd;
+        r.aiMetrics.aiDeletions = aiDel;
+        r.aiMetrics.humanAdditions = huAdd;
+        r.aiMetrics.humanDeletions = huDel;
+        r.aiMetrics.hasAiData = (aiAdd + huAdd) > 0;
+        double denom = aiAdd + huAdd;
+        r.aiMetrics.aiSharePercent = denom == 0 ? 0 : (aiAdd / denom) * 100.0;
+        Map<String, Object> insData = (Map<String, Object>) insights.getOrDefault("data", Map.of());
+        r.aiMetrics.aiActiveDays = (int) dbl(insData, "total_days");
+        if (r.aiMetrics.aiActiveDays == 0) {
+            int c = 0;
+            List<Map<String, Object>> sumData = (List<Map<String, Object>>) summaries.getOrDefault("data", List.of());
+            for (Map<String, Object> it : sumData) {
+                List<Map<String, Object>> cats = (List<Map<String, Object>>) it.getOrDefault("categories", List.of());
+                for (Map<String, Object> cat : cats) {
+                    if ("AI Coding".equals(str(cat, "name")) && dbl(cat, "total_seconds") > 0) c++;
+                }
+            }
+            r.aiMetrics.aiActiveDays = c;
+        }
+        r.aiMetrics.tools = new ArrayList<>();
+        List<Map<String, Object>> editors = (List<Map<String, Object>>) data.getOrDefault("editors", List.of());
+        for (Map<String, Object> e : editors) {
+            WakaTimeStatsResponse.AiTool t = new WakaTimeStatsResponse.AiTool();
+            t.name = str(e, "name");
+            t.percent = dbl(e, "percent");
+            t.timeText = str(e, "text");
+            r.aiMetrics.tools.add(t);
+        }
+
+        r.languages = new ArrayList<>();
+        List<Map<String, Object>> langs = (List<Map<String, Object>>) data.getOrDefault("languages", List.of());
+        double otherPct = 0;
+        int count = 0;
+        for (Map<String, Object> l : langs) {
+            if (count < 7) {
+                WakaTimeStatsResponse.Language li = new WakaTimeStatsResponse.Language();
+                li.name = str(l, "name");
+                li.percent = dbl(l, "percent");
+                li.timeText = str(l, "text");
+                r.languages.add(li);
+            } else {
+                otherPct += dbl(l, "percent");
+            }
+            count++;
+        }
+        if (count > 7) {
+            WakaTimeStatsResponse.Language o = new WakaTimeStatsResponse.Language();
+            o.name = "Outras";
+            o.percent = otherPct;
+            o.timeText = "";
+            r.languages.add(o);
+        }
+
+        r.timeline = new ArrayList<>();
+        boolean allTime = range.equals("all_time");
+        Map<String, long[]> monthly = new ConcurrentHashMap<>();
+        List<Map<String, Object>> sumData = (List<Map<String, Object>>) summaries.getOrDefault("data", List.of());
+        for (Map<String, Object> item : sumData) {
+            Map<String, Object> rng = (Map<String, Object>) item.getOrDefault("range", Map.of());
+            String date = str(rng, "date");
+            if (date.isEmpty()) date = str(item, "date");
+            long total = (long) dbl(item.getOrDefault("grand_total", Map.of()) instanceof Map ? (Map<String, Object>) item.get("grand_total") : Map.of(), "total_seconds");
+            long coding = 0, ai = 0;
+            List<Map<String, Object>> cats = (List<Map<String, Object>>) item.getOrDefault("categories", List.of());
+            for (Map<String, Object> cat : cats) {
+                String cn = str(cat, "name");
+                long sec = (long) dbl(cat, "total_seconds");
+                if ("Coding".equals(cn)) coding = sec;
+                if ("AI Coding".equals(cn)) ai = sec;
+            }
+            if (allTime) {
+                String month = date.length() >= 7 ? date.substring(0, 7) : date;
+                monthly.computeIfAbsent(month, k -> new long[3])[0] += total;
+                monthly.get(month)[1] += coding;
+                monthly.get(month)[2] += ai;
+            } else {
+                WakaTimeStatsResponse.TimelinePoint tp = new WakaTimeStatsResponse.TimelinePoint();
+                tp.date = date;
+                tp.totalSeconds = total;
+                tp.codingSeconds = coding;
+                tp.aiCodingSeconds = ai;
+                r.timeline.add(tp);
+            }
+        }
+        if (allTime) {
+            for (Map.Entry<String, long[]> e : monthly.entrySet()) {
+                WakaTimeStatsResponse.TimelinePoint tp = new WakaTimeStatsResponse.TimelinePoint();
+                tp.date = e.getKey();
+                tp.totalSeconds = e.getValue()[0];
+                tp.codingSeconds = e.getValue()[1];
+                tp.aiCodingSeconds = e.getValue()[2];
+                r.timeline.add(tp);
+            }
+        }
+
+        r.environment = new WakaTimeStatsResponse.Environment();
+        r.environment.editors = mapEnv((List<Map<String, Object>>) data.getOrDefault("editors", List.of()));
+        r.environment.operatingSystems = mapEnv((List<Map<String, Object>>) data.getOrDefault("operating_systems", List.of()));
+
+        return r;
+    }
+
+    private List<WakaTimeStatsResponse.EnvironmentItem> mapEnv(List<Map<String, Object>> arr) {
+        List<WakaTimeStatsResponse.EnvironmentItem> list = new ArrayList<>();
+        for (Map<String, Object> e : arr) {
+            WakaTimeStatsResponse.EnvironmentItem it = new WakaTimeStatsResponse.EnvironmentItem();
+            it.name = str(e, "name");
+            it.percent = dbl(e, "percent");
+            it.timeText = str(e, "text");
+            list.add(it);
+        }
+        return list;
+    }
+
+    private boolean isPrivate(String name) {
+        String lower = name.toLowerCase();
+        for (String p : privateProjects) {
+            if (lower.startsWith(p) || lower.contains(p)) return true;
+        }
+        return false;
+    }
+
+    private String str(Map<String, Object> node, String field) {
+        Object v = node.get(field);
+        if (v == null) return "";
+        if (v instanceof Map) {
+            Object t = ((Map<?, ?>) v).get("text");
+            return t == null ? "" : String.valueOf(t);
+        }
+        return String.valueOf(v);
+    }
+
+    private double dbl(Map<String, Object> node, String field) {
+        Object v = node.get(field);
+        if (v instanceof Number) return ((Number) v).doubleValue();
+        if (v == null) return 0;
+        try { return Double.parseDouble(String.valueOf(v)); } catch (Exception e) { return 0; }
+    }
+
+    private WakaTimeStatsResponse degraded(String range) {
+        WakaTimeStatsResponse r = new WakaTimeStatsResponse();
+        r.range = range;
+        r.updatedAt = Instant.now().toString();
+        r.overview = new WakaTimeStatsResponse.Overview();
+        r.overview.topProject = null;
+        r.aiMetrics = new WakaTimeStatsResponse.AiMetrics();
+        r.aiMetrics.tools = new ArrayList<>();
+        r.languages = new ArrayList<>();
+        r.projects = new ArrayList<>();
+        r.timeline = new ArrayList<>();
+        r.environment = new WakaTimeStatsResponse.Environment();
+        r.environment.editors = new ArrayList<>();
+        r.environment.operatingSystems = new ArrayList<>();
+        return r;
     }
 
     private String buildAuthHeader(String key) {
@@ -128,77 +326,7 @@ public class WakatimeService {
         return "Basic " + encoded;
     }
 
-    private WakatimeStatsDTO createMockStats(String range) {
-        WakatimeStatsDTO dto = new WakatimeStatsDTO();
-        WakatimeStatsDTO.DataDTO data = new WakatimeStatsDTO.DataDTO();
-        data.setHumanReadableTotal("38 hrs 42 mins");
-        data.setHumanReadableDailyAverage("5 hrs 31 mins");
-        data.setTotalSeconds(139320.0);
-        data.setDailyAverage(19860.0);
-
-        var languages = new ArrayList<WakatimeStatsDTO.LanguageItemDTO>();
-        languages.add(createLanguage("Java", 42.5, "16 hrs 25 mins", 59100.0));
-        languages.add(createLanguage("TypeScript", 28.3, "10 hrs 58 mins", 39480.0));
-        languages.add(createLanguage("SQL", 12.1, "4 hrs 40 mins", 16800.0));
-        languages.add(createLanguage("CSS", 9.4, "3 hrs 38 mins", 13080.0));
-        languages.add(createLanguage("HTML", 7.7, "2 hrs 59 mins", 10740.0));
-        data.setLanguages(languages);
-
-        var projects = new ArrayList<WakatimeStatsDTO.ProjectItemDTO>();
-        projects.add(createProject("portfolio-profissional", 54.0, "20 hrs 50 mins", 75000.0));
-        projects.add(createProject("backend-api", 31.0, "12 hrs 00 mins", 43200.0));
-        projects.add(createProject("microservices-playground", 15.0, "5 hrs 52 mins", 21120.0));
-        data.setProjects(projects);
-
-        var editors = new ArrayList<WakatimeStatsDTO.EditorItemDTO>();
-        editors.add(createEditor("VS Code", 68.0, "26 hrs 18 mins", 94680.0));
-        editors.add(createEditor("IntelliJ IDEA", 32.0, "12 hrs 24 mins", 44640.0));
-        data.setEditors(editors);
-
-        dto.setData(data);
-        return dto;
-    }
-
-    private WakatimeAllTimeDTO createMockAllTime() {
-        WakatimeAllTimeDTO dto = new WakatimeAllTimeDTO();
-        WakatimeAllTimeDTO.DataDTO data = new WakatimeAllTimeDTO.DataDTO();
-        data.setText("1,420 hrs 15 mins");
-        data.setTotalSeconds(5112900.0);
-        data.setDecimal("1420.25");
-        dto.setData(data);
-        return dto;
-    }
-
-    private WakatimeStatsDTO.LanguageItemDTO createLanguage(String name, double percent, String text, double seconds) {
-        var item = new WakatimeStatsDTO.LanguageItemDTO();
-        item.setName(name);
-        item.setPercent(percent);
-        item.setText(text);
-        item.setTotalSeconds(seconds);
-        return item;
-    }
-
-    private WakatimeStatsDTO.ProjectItemDTO createProject(String name, double percent, String text, double seconds) {
-        var item = new WakatimeStatsDTO.ProjectItemDTO();
-        item.setName(name);
-        item.setPercent(percent);
-        item.setText(text);
-        item.setTotalSeconds(seconds);
-        return item;
-    }
-
-    private WakatimeStatsDTO.EditorItemDTO createEditor(String name, double percent, String text, double seconds) {
-        var item = new WakatimeStatsDTO.EditorItemDTO();
-        item.setName(name);
-        item.setPercent(percent);
-        item.setText(text);
-        item.setTotalSeconds(seconds);
-        return item;
-    }
-
-    private record CacheEntry(Object data, long expiresAt) {
-        boolean isExpired() {
-            return Instant.now().toEpochMilli() > expiresAt;
-        }
+    private record CacheEntry(WakaTimeStatsResponse data, long expiresAt) {
+        boolean isExpired() { return Instant.now().toEpochMilli() > expiresAt; }
     }
 }
