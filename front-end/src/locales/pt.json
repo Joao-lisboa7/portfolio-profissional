@@ -1,7 +1,147 @@
 {
-  "home": "Início",
-  "about": "Sobre Mim",
-  "projects": "Projetos",
-  "experience": "Experiência",
-  "contact": "Contato"
+  "common": {
+    "back": "Voltar à página anterior"
+  },
+  "home": {
+    "title": "Home",
+    "name": "João Pedro Lisboa Brito",
+    "role": "Software Engineer",
+    "videoAlt": "Vídeo de fundo"
+  },
+  "about": {
+    "navTitle": "Sobre mim",
+    "eyebrowIntro": "Introdução",
+    "overline": "Uma jornada entre tecnologia e propósito",
+    "name": "João Pedro",
+    "role": "Software Engineer",
+    "summary": "Forjando soluções digitais robustas e experiências intuitivas. Minha jornada é guiada pela engenharia de precisão, pela curiosidade e por um olhar atento às necessidades de quem usa cada produto.",
+    "trajectoryLink": "Conheça minha trajetória",
+    "portraitCaption": "Minas Gerais · Brasil",
+    "eyebrowOrigin": "Origem",
+    "originHeading": "Uma base construída com intenção.",
+    "originIntro": "Conhecimento acadêmico e experiência prática moldando a forma como resolvo problemas.",
+    "academicLabel": "Formação acadêmica",
+    "academicTitle": "Engenharia de Software",
+    "academicMeta": "PUC Minas",
+    "academicDesc": "Uma formação voltada a desenvolvimento de software, engenharia de requisitos, arquitetura de sistemas e resolução estruturada de problemas.",
+    "professionalLabel": "Experiência profissional",
+    "professionalTitle": "CNH Industrial",
+    "professionalMeta": "Tecnologia · Operações digitais",
+    "professionalDesc": "Experiência com plataformas digitais, telemetria e suporte técnico em escala para equipes da América Latina e da América do Norte.",
+    "eyebrowArsenal": "Arsenal",
+    "arsenalHeading": "Skills que transformam desafios em soluções.",
+    "arsenalIntro": "Uma combinação de repertório técnico, visão de produto e competências humanas.",
+    "technicalHeading": "Habilidades técnicas",
+    "softHeading": "Competências interpessoais",
+    "skills": {
+      "software": {
+        "title": "Desenvolvimento de software",
+        "desc": "Construção de APIs, organização de código e integração entre sistemas."
+      },
+      "data": {
+        "title": "Dados e persistência",
+        "desc": "Estruturação, armazenamento e integração de dados para aplicações digitais."
+      },
+      "product": {
+        "title": "Análise e gestão de produtos",
+        "desc": "Transformação de necessidades de negócio em demandas e soluções viáveis."
+      },
+      "analytical": {
+        "title": "Pensamento analítico",
+        "desc": "Investigar problemas, interpretar informações e avaliar alternativas antes de propor soluções."
+      },
+      "communication": {
+        "title": "Comunicação",
+        "desc": "Conectar perspectivas técnicas e de negócio, alinhando ideias entre diferentes públicos."
+      },
+      "collaboration": {
+        "title": "Colaboração",
+        "desc": "Contribuir para objetivos compartilhados, trocar conhecimentos e trabalhar entre áreas."
+      },
+      "learning": {
+        "title": "Aprendizado contínuo",
+        "desc": "Buscar novos conhecimentos e adaptar habilidades a desafios e tecnologias."
+      }
+    },
+    "eyebrowPhilosophy": "Filosofia",
+    "philosophyHeading": "Boas soluções começam pela escuta.",
+    "philosophyBody": "Acredito que tecnologia de qualidade nasce da compreensão genuína dos problemas. Por isso, valorizo a colaboração, o aprendizado constante e a construção de produtos que conectam necessidades reais a soluções simples, confiáveis e úteis.",
+    "philosophySignature": "O próximo capítulo está em construção.",
+    "footer": "Pronto para novos desafios e para construir o próximo capítulo."
+  },
+  "experiences": {
+    "navTitle": "Experiências",
+    "badge": "Jornada Profissional",
+    "heading": "Linha do Tempo",
+    "subtitle": "Cada fase representa um marco de evolução técnica, liderança prática e impacto em produtos reais. Clique em um marco para ver os detalhes.",
+    "loading": "Carregando experiências...",
+    "error": "Não foi possível carregar as experiências profissionais no momento.",
+    "errorHint": "Certifique-se de que o serviço backend está ativo na porta 8080.",
+    "chapter": "Capítulo {{roman}}",
+    "present": "Atual",
+    "presentUpper": "PRESENTE",
+    "viewDetails": "Ver detalhes da experiência",
+    "markerTitle": "Ver detalhes",
+    "noExperiences": "Nenhuma experiência cadastrada até o momento.",
+    "resumeHeading": "Currículo",
+    "seniority": {
+      "ESTAGIO": "Estágio",
+      "JUNIOR": "Júnior",
+      "PLENO": "Pleno",
+      "SENIOR": "Sênior"
+    }
+  },
+  "statistics": {
+    "navTitle": "Estatísticas",
+    "heading": "Métricas & Produtividade",
+    "subtitle": "Dados de atividade de desenvolvimento em tempo real rastreados via WakaTime API, evidenciando consistência técnica, dedicação acumulada e foco em linguagens modernas.",
+    "last30": "Últimos 30 dias",
+    "allTime": "Todo o período",
+    "retry": "Tentar novamente",
+    "error": "Não foi possível carregar as métricas do Wakatime. Certifique-se de que o backend está ativo.",
+    "totalTime": "Tempo Total",
+    "inPeriod": "No período",
+    "dailyAverage": "Média Diária",
+    "consistency": "Constância",
+    "activeDays": "Dias Ativos",
+    "aiHeading": "Engenharia Assistida por IA",
+    "aiShare": "Compartilhamento de código por IA:",
+    "human": "Humano",
+    "techStack": "Stack Técnica",
+    "projects": "Projetos & Entregas",
+    "private": "(privado)",
+    "noProjects": "Nenhum projeto registrado no período.",
+    "environments": "Ambientes",
+    "noEditors": "Nenhum editor.",
+    "operatingSystems": "Sistemas Operacionais",
+    "noOS": "Nenhum SO."
+  },
+  "experienceCard": {
+    "closeExperience": "Fechar experiência",
+    "close": "Fechar",
+    "present": "PRESENTE",
+    "keyActivities": "Principais Atividades & Responsabilidades",
+    "experienceRecord": "REGISTRO DE EXPERIÊNCIA",
+    "closeEsc": "FECHAR [ESC]"
+  },
+  "resume": {
+    "title": "Currículo",
+    "download": "Baixar",
+    "open": "Abrir",
+    "loading": "Carregando...",
+    "error": "Erro ao carregar PDF",
+    "zoom": "Zoom",
+    "zoomOut": "Diminuir zoom",
+    "zoomIn": "Aumentar zoom",
+    "zoomReset": "Ajustar zoom",
+    "file": "curriculo.pdf",
+    "pages": "páginas"
+  },
+  "menu": {
+    "about": "Sobre Mim",
+    "projects": "Projetos",
+    "experience": "Experiência",
+    "statistics": "Estatísticas",
+    "contact": "Contato"
+  }
 }

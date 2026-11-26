@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 import { Document, Page, pdfjs } from "react-pdf";
 
@@ -22,7 +23,8 @@ const ZOOM_MAX = 2;
 const ZOOM_PASSO = 0.25;
 
 interface ResumeProps { language?: 'pt' | 'en'; }
-const Curriculo = ({ language = 'pt' }: ResumeProps) => {
+const Curriculo = ({ language }: ResumeProps) => {
+  const { t, i18n } = useTranslation();
   const areaRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const [largura, setLargura] = useState<number | null>(null);
@@ -30,21 +32,8 @@ const Curriculo = ({ language = 'pt' }: ResumeProps) => {
   const [zoom, setZoom] = useState(1);
   const [erro, setErro] = useState(false);
 
-  const lang = language === 'en' ? 'en' : 'pt';
+  const lang = language ? (language === 'en' ? 'en' : 'pt') : (i18n.language === 'pt' ? 'pt' : 'en');
   const fileUrl = `/resumes/cv-${lang}.pdf`;
-  const dict: Record<string, { pt: string; en: string }> = {
-    'curriculo.titulo': { pt: 'Currículo', en: 'Resume' },
-    'curriculo.baixar': { pt: 'Baixar', en: 'Download' },
-    'curriculo.abrir': { pt: 'Abrir', en: 'Open' },
-    'curriculo.carregando': { pt: 'Carregando...', en: 'Loading...' },
-    'curriculo.erro': { pt: 'Erro ao carregar PDF', en: 'Error loading PDF' },
-    'curriculo.zoom': { pt: 'Zoom', en: 'Zoom' },
-    'curriculo.zoom_menos': { pt: 'Diminuir zoom', en: 'Zoom out' },
-    'curriculo.zoom_mais': { pt: 'Aumentar zoom', en: 'Zoom in' },
-    'curriculo.zoom_ajustar': { pt: 'Ajustar zoom', en: 'Reset zoom' },
-    'curriculo.arquivo': { pt: 'curriculo.pdf', en: 'resume.pdf' },
-  };
-  const t = (key: string) => dict[key]?.[lang] ?? key;
 
   // Trocou o idioma: outro PDF, que ainda não carregou nem deu erro
   const [arquivoAtual, setArquivoAtual] = useState(fileUrl);
@@ -80,19 +69,19 @@ const Curriculo = ({ language = 'pt' }: ResumeProps) => {
     <div className="resume-container" ref={ref}>
       <div className="cv-barra">
         <span className="cv-titulo">
-          {t("curriculo.titulo")}
+          {t("resume.title")}
           {paginas > 0 && (
             <span className="cv-paginas">{paginas}</span>
           )}
         </span>
 
-        <div className="cv-zoom" role="group" aria-label={t("curriculo.zoom")}>
+        <div className="cv-zoom" role="group" aria-label={t("resume.zoom")}>
           <button
             type="button"
             onClick={() => mudarZoom(-ZOOM_PASSO)}
             disabled={zoom <= ZOOM_MIN}
-            aria-label={t("curriculo.zoom_menos")}
-            title={t("curriculo.zoom_menos")}
+            aria-label={t("resume.zoomOut")}
+            title={t("resume.zoomOut")}
           >
             <FiZoomOut aria-hidden="true" />
           </button>
@@ -103,8 +92,8 @@ const Curriculo = ({ language = 'pt' }: ResumeProps) => {
             type="button"
             onClick={() => mudarZoom(ZOOM_PASSO)}
             disabled={zoom >= ZOOM_MAX}
-            aria-label={t("curriculo.zoom_mais")}
-            title={t("curriculo.zoom_mais")}
+            aria-label={t("resume.zoomIn")}
+            title={t("resume.zoomIn")}
           >
             <FiZoomIn aria-hidden="true" />
           </button>
@@ -112,21 +101,21 @@ const Curriculo = ({ language = 'pt' }: ResumeProps) => {
             type="button"
             onClick={() => setZoom(1)}
             disabled={zoom === 1}
-            aria-label={t("curriculo.zoom_ajustar")}
-            title={t("curriculo.zoom_ajustar")}
+            aria-label={t("resume.zoomReset")}
+            title={t("resume.zoomReset")}
           >
             <FiMaximize2 aria-hidden="true" />
           </button>
         </div>
 
         <div className="cv-acoes">
-          <a className="cv-botao principal" href={fileUrl} download={t("curriculo.arquivo")}>
+          <a className="cv-botao principal" href={fileUrl} download={t("resume.file")}>
             <FiDownload aria-hidden="true" />
-            {t("curriculo.baixar")}
+            {t("resume.download")}
           </a>
           <a className="cv-botao" href={fileUrl} target="_blank" rel="noopener noreferrer">
             <FiExternalLink aria-hidden="true" />
-            {t("curriculo.abrir")}
+            {t("resume.open")}
           </a>
         </div>
       </div>
@@ -135,12 +124,12 @@ const Curriculo = ({ language = 'pt' }: ResumeProps) => {
         {carregando && (
           <p className="cv-aviso" role="status">
             <span className="cv-spinner" aria-hidden="true" />
-            {t("curriculo.carregando")}
+            {t("resume.loading")}
           </p>
         )}
         {erro ? (
           // Navegador antigo ou falha de rede: os botões acima continuam valendo
-          <p className="cv-aviso">{t("curriculo.erro")}</p>
+          <p className="cv-aviso">{t("resume.error")}</p>
         ) : (
           <Document
             key={fileUrl}

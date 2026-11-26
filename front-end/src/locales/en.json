@@ -1,7 +1,147 @@
 {
-  "home": "Home",
-  "about": "About Me",
-  "projects": "Projects",
-  "experience": "Experience",
-  "contact": "Contact"
+  "common": {
+    "back": "Back to previous page"
+  },
+  "home": {
+    "title": "Home",
+    "name": "João Pedro Lisboa Brito",
+    "role": "Software Engineer",
+    "videoAlt": "Background video"
+  },
+  "about": {
+    "navTitle": "About me",
+    "eyebrowIntro": "Introduction",
+    "overline": "A journey between technology and purpose",
+    "name": "João Pedro",
+    "role": "Software Engineer",
+    "summary": "Forging robust digital solutions and intuitive experiences. My journey is guided by precision engineering, curiosity and an attentive eye to the needs of everyone who uses each product.",
+    "trajectoryLink": "Discover my journey",
+    "portraitCaption": "Minas Gerais · Brazil",
+    "eyebrowOrigin": "Origin",
+    "originHeading": "A foundation built with intention.",
+    "originIntro": "Academic knowledge and hands-on experience shaping how I solve problems.",
+    "academicLabel": "Academic background",
+    "academicTitle": "Software Engineering",
+    "academicMeta": "PUC Minas",
+    "academicDesc": "A formation focused on software development, requirements engineering, systems architecture and structured problem solving.",
+    "professionalLabel": "Professional experience",
+    "professionalTitle": "CNH Industrial",
+    "professionalMeta": "Technology · Digital operations",
+    "professionalDesc": "Experience with digital platforms, telemetry and large-scale technical support for teams across Latin and North America.",
+    "eyebrowArsenal": "Arsenal",
+    "arsenalHeading": "Skills that turn challenges into solutions.",
+    "arsenalIntro": "A blend of technical repertoire, product vision and human skills.",
+    "technicalHeading": "Technical skills",
+    "softHeading": "Interpersonal skills",
+    "skills": {
+      "software": {
+        "title": "Software development",
+        "desc": "Building APIs, organizing code and integrating systems."
+      },
+      "data": {
+        "title": "Data and persistence",
+        "desc": "Structuring, storing and integrating data for digital applications."
+      },
+      "product": {
+        "title": "Analysis and product management",
+        "desc": "Turning business needs into viable demands and solutions."
+      },
+      "analytical": {
+        "title": "Analytical thinking",
+        "desc": "Investigating problems, interpreting information and evaluating alternatives before proposing solutions."
+      },
+      "communication": {
+        "title": "Communication",
+        "desc": "Connecting technical and business perspectives, aligning ideas across different audiences."
+      },
+      "collaboration": {
+        "title": "Collaboration",
+        "desc": "Contributing to shared goals, exchanging knowledge and working across areas."
+      },
+      "learning": {
+        "title": "Continuous learning",
+        "desc": "Seeking new knowledge and adapting skills to challenges and technologies."
+      }
+    },
+    "eyebrowPhilosophy": "Philosophy",
+    "philosophyHeading": "Good solutions start with listening.",
+    "philosophyBody": "I believe quality technology is born from a genuine understanding of problems. That is why I value collaboration, constant learning and building products that connect real needs to simple, reliable and useful solutions.",
+    "philosophySignature": "The next chapter is under construction.",
+    "footer": "Ready for new challenges and to build the next chapter."
+  },
+  "experiences": {
+    "navTitle": "Experiences",
+    "badge": "Professional Journey",
+    "heading": "Career Timeline",
+    "subtitle": "Each phase marks a milestone in technical mastery, practical leadership and real product impact. Click on a milestone to view full details.",
+    "loading": "Loading experiences...",
+    "error": "Could not load professional experiences at this time.",
+    "errorHint": "Make sure the backend service is running on port 8080.",
+    "chapter": "Chapter {{roman}}",
+    "present": "Present",
+    "presentUpper": "PRESENT",
+    "viewDetails": "View experience details",
+    "markerTitle": "View details",
+    "noExperiences": "No experiences recorded yet.",
+    "resumeHeading": "Resume",
+    "seniority": {
+      "ESTAGIO": "Internship",
+      "JUNIOR": "Junior",
+      "PLENO": "Mid-level",
+      "SENIOR": "Senior"
+    }
+  },
+  "statistics": {
+    "navTitle": "Statistics",
+    "heading": "Metrics & Productivity",
+    "subtitle": "Real-time coding analytics tracked via WakaTime API, demonstrating engineering consistency, lifetime dedication and modern language expertise.",
+    "last30": "Last 30 days",
+    "allTime": "All time",
+    "retry": "Try again",
+    "error": "Could not load Wakatime metrics at this moment. Ensure the backend is running.",
+    "totalTime": "Total Time",
+    "inPeriod": "In period",
+    "dailyAverage": "Daily Average",
+    "consistency": "Consistency",
+    "activeDays": "Active Days",
+    "aiHeading": "AI-Assisted Engineering",
+    "aiShare": "AI code share:",
+    "human": "Human",
+    "techStack": "Tech Stack",
+    "projects": "Projects & Deliveries",
+    "private": "(private)",
+    "noProjects": "No projects logged for this period.",
+    "environments": "Environments",
+    "noEditors": "No editors.",
+    "operatingSystems": "Operating Systems",
+    "noOS": "No OS."
+  },
+  "experienceCard": {
+    "closeExperience": "Close experience",
+    "close": "Close",
+    "present": "PRESENT",
+    "keyActivities": "Key Activities & Responsibilities",
+    "experienceRecord": "EXPERIENCE RECORD",
+    "closeEsc": "CLOSE [ESC]"
+  },
+  "resume": {
+    "title": "Resume",
+    "download": "Download",
+    "open": "Open",
+    "loading": "Loading...",
+    "error": "Error loading PDF",
+    "zoom": "Zoom",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "zoomReset": "Reset zoom",
+    "file": "resume.pdf",
+    "pages": "pages"
+  },
+  "menu": {
+    "about": "About Me",
+    "projects": "Projects",
+    "experience": "Experience",
+    "statistics": "Statistics",
+    "contact": "Contact"
+  }
 }

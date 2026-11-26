@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import type { Experience } from '@/types/Experience';
 
 export interface ExperienceCardProps {
   experience: Experience;
   onClose?: () => void;
-  language?: 'pt' | 'en';
 }
 
-export function ExperienceCard({ experience, onClose, language = 'pt' }: ExperienceCardProps) {
+export function ExperienceCard({ experience, onClose }: ExperienceCardProps) {
+  const { t, i18n } = useTranslation();
+  const isPt = i18n.language === 'pt';
+
   // Evento para fechar ao pressionar a tecla ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -19,16 +22,6 @@ export function ExperienceCard({ experience, onClose, language = 'pt' }: Experie
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
-
-  const isPt = language === 'pt';
-
-  // Formatação amigável da senioridade
-  const seniorityLabel: Record<Experience['seniorityLevel'], { pt: string; en: string }> = {
-    ESTAGIO: { pt: 'Estágio', en: 'Internship' },
-    JUNIOR: { pt: 'Júnior', en: 'Junior' },
-    PLENO: { pt: 'Pleno', en: 'Mid-level' },
-    SENIOR: { pt: 'Sênior', en: 'Senior' },
-  };
 
   const position = isPt ? experience.positionPt : experience.positionEn;
   const description = isPt ? experience.descriptionPt : experience.descriptionEn;
@@ -65,8 +58,8 @@ export function ExperienceCard({ experience, onClose, language = 'pt' }: Experie
             type="button"
             onClick={onClose}
             className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-amber-500 hover:bg-zinc-900/80 transition-all border border-zinc-800/80 hover:border-amber-600/60 rounded-sm group focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-            aria-label={isPt ? "Fechar experiência" : "Close experience"}
-            title={isPt ? "Fechar" : "Close"}
+            aria-label={t('experienceCard.closeExperience')}
+            title={t('experienceCard.close')}
           >
             <X 
               size={18}
@@ -86,12 +79,12 @@ export function ExperienceCard({ experience, onClose, language = 'pt' }: Experie
                 {experience.company}
               </span>
               <span className="text-zinc-500 text-xs font-mono tracking-tight">
-                // {seniorityLabel[experience.seniorityLevel]?.[language] ?? experience.seniorityLevel}
+                // {t(`experiences.seniority.${experience.seniorityLevel}` as any)}
               </span>
             </div>
 
             <span className="font-cinzel text-xs text-zinc-400 tracking-wider">
-              {experience.startDate} — {experience.current ? <strong className="text-amber-500">{isPt ? 'PRESENTE' : 'PRESENT'}</strong> : experience.endDate}
+              {experience.startDate} — {experience.current ? <strong className="text-amber-500">{t('experienceCard.present')}</strong> : experience.endDate}
             </span>
           </div>
 
@@ -107,7 +100,7 @@ export function ExperienceCard({ experience, onClose, language = 'pt' }: Experie
         {/* Lista de Atividades por Tópicos com distribuição harmônica */}
         <div className="space-y-3 overflow-y-auto pr-2 max-h-[52vh]">
           <h3 className="font-cinzel text-xs text-amber-600/90 tracking-widest uppercase font-semibold">
-            {isPt ? 'Principais Atividades & Responsabilidades' : 'Key Activities & Responsibilities'}
+            {t('experienceCard.keyActivities')}
           </h3>
 
           <ul className="space-y-3">
@@ -123,14 +116,14 @@ export function ExperienceCard({ experience, onClose, language = 'pt' }: Experie
 
         {/* Rodapé do Card */}
         <div className="mt-6 pt-4 border-t border-zinc-900/80 flex justify-between items-center text-[11px] text-zinc-500 font-cinzel tracking-widest">
-          <span>{isPt ? 'REGISTRO DE EXPERIÊNCIA' : 'EXPERIENCE RECORD'}</span>
+          <span>{t('experienceCard.experienceRecord')}</span>
           {onClose && (
             <button 
               type="button"
               onClick={onClose}
               className="hover:text-amber-500 transition-colors uppercase"
             >
-              {isPt ? 'FECHAR [ESC]' : 'CLOSE [ESC]'}
+              {t('experienceCard.closeEsc')}
             </button>
           )}
         </div>
