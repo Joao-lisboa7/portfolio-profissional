@@ -13,8 +13,8 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'about', element: <About /> },
-      { path: 'experiences', element: <Experiences language="pt" /> },
-      { path: 'statistics', element: <Statistics language="pt" /> },
+      { path: 'experiences', element: <Experiences /> },
+      { path: 'statistics', element: <Statistics /> },
       { path: '*', element: <p>Rota não encontrada</p> },
     ],
   },

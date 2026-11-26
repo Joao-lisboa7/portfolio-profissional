@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail, User, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import './navbar.css';
@@ -9,7 +10,8 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ title = 'Untitled', showBackButton = true }) => {
-  const [activeLang, setActiveLang] = useState<'ENG' | 'POR'>('ENG');
+  const { t, i18n } = useTranslation();
+  const activeLang: 'ENG' | 'POR' = i18n.language === 'pt' ? 'POR' : 'ENG';
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,8 +35,8 @@ const Navbar: React.FC<NavbarProps> = ({ title = 'Untitled', showBackButton = tr
             type="button"
             onClick={handleBack}
             className="navbar-back-btn group"
-            title="Voltar à página anterior"
-            aria-label="Voltar à página anterior"
+            title={t('common.back')}
+            aria-label={t('common.back')}
           >
             <span className="navbar-back-btn__icon-wrapper">
               <ArrowLeft
@@ -57,7 +59,7 @@ const Navbar: React.FC<NavbarProps> = ({ title = 'Untitled', showBackButton = tr
         {/* Language Toggle Group */}
         <div className="flex bg-black/40 border border-gray-800 rounded-sm overflow-hidden backdrop-blur-sm">
           <button
-            onClick={() => setActiveLang('ENG')}
+            onClick={() => i18n.changeLanguage('en')}
             className={`px-4 py-1.5 text-xs font-semibold tracking-wider transition-colors duration-200 ${
               activeLang === 'ENG'
                 ? 'bg-red-800 text-white'
@@ -67,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ title = 'Untitled', showBackButton = tr
             ENG
           </button>
           <button
-            onClick={() => setActiveLang('POR')}
+            onClick={() => i18n.changeLanguage('pt')}
             className={`px-4 py-1.5 text-xs font-semibold tracking-wider transition-colors duration-200 ${
               activeLang === 'POR'
                 ? 'bg-red-800 text-white'

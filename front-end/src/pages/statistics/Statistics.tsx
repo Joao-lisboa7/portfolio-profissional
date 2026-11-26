@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Navbar from '@/components/navbar/Navbar';
 import { StatCard } from '@/components/wakatime/StatCard';
 import { LanguageBar } from '@/components/wakatime/LanguageBar';
@@ -7,17 +8,12 @@ import type { WakaTimeStatsResponse, WakaTimeRange } from '@/types/Wakatime';
 import { Clock, TrendingUp, Calendar, Code, FolderGit2, Monitor, RefreshCw } from 'lucide-react';
 import './statistics.css';
 
-interface StatisticsProps {
-  language?: 'pt' | 'en';
-}
-
-export default function Statistics({ language = 'pt' }: StatisticsProps) {
+export default function Statistics() {
+  const { t } = useTranslation();
   const [range, setRange] = useState<WakaTimeRange>('last_30_days');
   const [stats, setStats] = useState<WakaTimeStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const isPt = language === 'pt';
 
   const fetchData = async (selectedRange: WakaTimeRange) => {
     setLoading(true);
@@ -26,11 +22,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
       const statsRes = await getWakatimeStats(selectedRange);
       setStats(statsRes);
     } catch {
-      setError(
-        isPt
-          ? 'Não foi possível carregar as métricas do Wakatime. Certifique-se de que o backend está ativo.'
-          : 'Could not load Wakatime metrics at this moment. Ensure the backend is running.'
-      );
+      setError(t('statistics.error'));
     } finally {
       setLoading(false);
     }
@@ -42,18 +34,16 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
 
   return (
     <div className="statistics-page">
-      <Navbar title={isPt ? "Estatísticas" : "Statistics"} />
+      <Navbar title={t('statistics.navTitle')} />
       <div className="statistics-page__backdrop" aria-hidden="true" />
 
       <main className="statistics-page__main">
         <header className="text-center mb-12 md:mb-16">
           <h1 className="font-cinzel text-3xl md:text-5xl text-zinc-100 font-bold tracking-wider mb-4">
-            {isPt ? 'Métricas & Produtividade' : 'Metrics & Productivity'}
+            {t('statistics.heading')}
           </h1>
           <p className="max-w-2xl mx-auto text-zinc-400 text-sm md:text-base leading-relaxed">
-            {isPt
-              ? 'Dados de atividade de desenvolvimento em tempo real rastreados via WakaTime API, evidenciando consistência técnica, dedicação acumulada e foco em linguagens modernas.'
-              : 'Real-time coding analytics tracked via WakaTime API, demonstrating engineering consistency, lifetime dedication, and modern language expertise.'}
+            {t('statistics.subtitle')}
           </p>
 
           <div className="flex items-center justify-center gap-2 mt-8" role="radiogroup">
@@ -61,13 +51,13 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
               onClick={() => setRange('last_30_days')}
               className={`range-btn ${range === 'last_30_days' ? 'range-btn--active' : 'range-btn--inactive'}`}
             >
-              {isPt ? 'Últimos 30 dias' : 'Last 30 days'}
+              {t('statistics.last30')}
             </button>
             <button
               onClick={() => setRange('all_time')}
               className={`range-btn ${range === 'all_time' ? 'range-btn--active' : 'range-btn--inactive'}`}
             >
-              {isPt ? 'Todo o período' : 'All time'}
+              {t('statistics.allTime')}
             </button>
           </div>
         </header>
@@ -89,7 +79,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
               className="inline-flex items-center gap-2 text-xs font-cinzel text-amber-500 hover:text-amber-400 uppercase tracking-wider"
             >
               <RefreshCw size={14} />
-              {isPt ? 'Tentar novamente' : 'Try again'}
+              {t('statistics.retry')}
             </button>
           </div>
         )}
@@ -100,19 +90,19 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard
                 icon={Clock}
-                label={isPt ? 'Tempo Total' : 'Total Time'}
+                label={t('statistics.totalTime')}
                 value={stats.overview.totalTimeText || '—'}
-                subtext={isPt ? 'No período' : 'In period'}
+                subtext={t('statistics.inPeriod')}
               />
               <StatCard
                 icon={Calendar}
-                label={isPt ? 'Média Diária' : 'Daily Average'}
+                label={t('statistics.dailyAverage')}
                 value={stats.overview.dailyAverageText || '—'}
-                subtext={isPt ? 'Constância' : 'Consistency'}
+                subtext={t('statistics.consistency')}
               />
               <StatCard
                 icon={TrendingUp}
-                label={isPt ? 'Dias Ativos' : 'Active Days'}
+                label={t('statistics.activeDays')}
                 value={String(stats.overview.activeDays)}
                 subtext={stats.overview.topProject ? `${stats.overview.topProject.name}` : '—'}
               />
@@ -122,20 +112,20 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
             {stats.aiMetrics.hasAiData && (
               <div className="statistics-panel">
                 <h2 className="font-cinzel text-xl text-zinc-100 font-semibold tracking-wide mb-4">
-                  {isPt ? 'Engenharia Assistida por IA' : 'AI-Assisted Engineering'}
+                  {t('statistics.aiHeading')}
                 </h2>
                 <p className="text-zinc-400 text-sm mb-4">
-                  {isPt ? 'Compartilhamento de código por IA:' : 'AI code share:'} {stats.aiMetrics.aiSharePercent.toFixed(0)}%
+                  {t('statistics.aiShare')} {stats.aiMetrics.aiSharePercent.toFixed(0)}%
                 </p>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>AI +{stats.aiMetrics.aiAdditions} / -{stats.aiMetrics.aiDeletions}</div>
-                  <div>Humano +{stats.aiMetrics.humanAdditions} / -{stats.aiMetrics.humanDeletions}</div>
+                  <div>{t('statistics.human')} +{stats.aiMetrics.humanAdditions} / -{stats.aiMetrics.humanDeletions}</div>
                 </div>
                 <ul className="mt-4 space-y-2">
-                  {stats.aiMetrics.tools.map(t => (
-                    <li key={t.name} className="flex justify-between text-xs font-mono text-zinc-300">
-                      <span>{t.name}</span>
-                      <span>{t.timeText} ({t.percent.toFixed(0)}%)</span>
+                  {stats.aiMetrics.tools.map(tl => (
+                    <li key={tl.name} className="flex justify-between text-xs font-mono text-zinc-300">
+                      <span>{tl.name}</span>
+                      <span>{tl.timeText} ({tl.percent.toFixed(0)}%)</span>
                     </li>
                   ))}
                 </ul>
@@ -147,7 +137,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
               <div className="flex items-center gap-3 mb-5">
                 <Code size={20} className="text-amber-500" />
                 <h2 className="font-cinzel text-xl text-zinc-100 font-semibold tracking-wide">
-                  {isPt ? 'Stack Técnica' : 'Tech Stack'}
+                  {t('statistics.techStack')}
                 </h2>
               </div>
               <div className="space-y-4">
@@ -168,7 +158,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
               <div className="flex items-center gap-3 mb-5">
                 <FolderGit2 size={18} className="text-amber-500" />
                 <h3 className="font-cinzel text-lg text-zinc-100 font-semibold tracking-wide">
-                  {isPt ? 'Projetos & Entregas' : 'Projects & Deliveries'}
+                  {t('statistics.projects')}
                 </h3>
               </div>
               <div>
@@ -176,7 +166,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
                   stats.projects.slice(0, 8).map((proj) => (
                     <div key={proj.name} className="stat-list-row">
                       <span className="font-mono text-sm text-zinc-300 truncate pr-4">
-                        {proj.name}{proj.isPrivate ? ' (privado)' : ''}
+                        {proj.name}{proj.isPrivate ? ` ${t('statistics.private')}` : ''}
                       </span>
                       <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
                         <span>{proj.timeText}</span>
@@ -187,7 +177,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
                   ))
                 ) : (
                   <p className="text-zinc-500 text-xs font-mono">
-                    {isPt ? 'Nenhum projeto registrado no período.' : 'No projects logged for this period.'}
+                    {t('statistics.noProjects')}
                   </p>
                 )}
               </div>
@@ -199,7 +189,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
                 <div className="flex items-center gap-3 mb-5">
                   <Monitor size={18} className="text-amber-500" />
                   <h3 className="font-cinzel text-lg text-zinc-100 font-semibold tracking-wide">
-                    {isPt ? 'Ambientes' : 'Environments'}
+                    {t('statistics.environments')}
                   </h3>
                 </div>
                 <div>
@@ -215,13 +205,13 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-zinc-500 text-xs font-mono">{isPt ? 'Nenhum editor.' : 'No editors.'}</p>
+                    <p className="text-zinc-500 text-xs font-mono">{t('statistics.noEditors')}</p>
                   )}
                 </div>
               </div>
               <div className="statistics-panel">
                 <h3 className="font-cinzel text-lg text-zinc-100 font-semibold tracking-wide mb-5">
-                  {isPt ? 'Sistemas Operacionais' : 'Operating Systems'}
+                  {t('statistics.operatingSystems')}
                 </h3>
                 <div>
                   {stats.environment.operatingSystems.length > 0 ? (
@@ -236,7 +226,7 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-zinc-500 text-xs font-mono">{isPt ? 'Nenhum SO.' : 'No OS.'}</p>
+                    <p className="text-zinc-500 text-xs font-mono">{t('statistics.noOS')}</p>
                   )}
                 </div>
               </div>
