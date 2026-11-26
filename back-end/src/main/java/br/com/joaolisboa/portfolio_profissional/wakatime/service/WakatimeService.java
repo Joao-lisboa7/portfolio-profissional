@@ -61,10 +61,20 @@ public class WakatimeService {
         }
         try {
             String auth = buildAuthHeader(apiKey);
-            CompletableFuture<Map<String, Object>> statsF = CompletableFuture.supplyAsync(() ->
-                    fetchMap("/users/current/stats/" + effectiveRange, auth));
-            CompletableFuture<Map<String, Object>> summariesF = CompletableFuture.supplyAsync(() ->
-                    fetchMap("/users/current/summaries?start=" + startDate(effectiveRange) + "&end=" + LocalDate.now(ZoneOffset.UTC), auth));
+            CompletableFuture<Map<String, Object>> statsF = CompletableFuture.supplyAsync(() -> {
+                Map<String, Object> s = fetchMap("/users/current/stats/" + effectiveRange, auth);
+                if (s == null || s.isEmpty() || !s.containsKey("data")) {
+                    // fallback for all_time still processing
+                    try { return fetchMap("/users/current/all_time_since_today", auth); } catch (Exception e) { return s == null ? Map.of() : s; }
+                }
+                return s;
+            });
+            CompletableFuture<Map<String, Object>> summariesF = CompletableFuture.supplyAsync(() -> {
+                if (effectiveRange.equals("all_time")) {
+                    return fetchSummariesChunked(auth, startDate(effectiveRange), LocalDate.now(ZoneOffset.UTC));
+                }
+                return fetchMap("/users/current/summaries?start=" + startDate(effectiveRange) + "&end=" + LocalDate.now(ZoneOffset.UTC), auth);
+            });
             CompletableFuture<Map<String, Object>> insightsF = CompletableFuture.supplyAsync(() -> {
                 try {
                     return fetchMap("/users/current/insights/ai_days/" + effectiveRange, auth);
@@ -83,6 +93,25 @@ public class WakatimeService {
             if (cached != null) return cached.data();
             return degraded(effectiveRange);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> fetchSummariesChunked(String auth, LocalDate start, LocalDate end) {
+        List<Map<String, Object>> allData = new ArrayList<>();
+        LocalDate cursor = start;
+        while (!cursor.isAfter(end)) {
+            LocalDate chunkEnd = cursor.plusDays(30);
+            if (chunkEnd.isAfter(end)) chunkEnd = end;
+            try {
+                Map<String, Object> part = fetchMap("/users/current/summaries?start=" + cursor + "&end=" + chunkEnd, auth);
+                List<Map<String, Object>> d = (List<Map<String, Object>>) part.getOrDefault("data", List.of());
+                allData.addAll(d);
+            } catch (Exception e) {
+                log.warn("Chunk summaries falhou {}..{}: {}", cursor, chunkEnd, e.getMessage());
+            }
+            cursor = chunkEnd.plusDays(1);
+        }
+        return Map.of("data", allData);
     }
 
     @SuppressWarnings("unchecked")
