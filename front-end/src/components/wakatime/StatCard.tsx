@@ -11,7 +11,6 @@ export function StatCard({ icon: Icon, label, value, subtext }: StatCardProps) {
   return (
     <div className="stat-card group">
       {/* Marcador decorativo de losango no topo */}
-      <div className="stat-card__marker" aria-hidden="true" />
       
       <div className="flex items-center gap-3 mb-2">
         <div className="stat-card__icon-wrap">
