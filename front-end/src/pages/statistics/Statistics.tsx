@@ -47,10 +47,6 @@ export default function Statistics({ language = 'pt' }: StatisticsProps) {
 
       <main className="statistics-page__main">
         <header className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 border border-amber-900/40 bg-amber-950/20 text-amber-500 font-cinzel text-xs tracking-widest uppercase">
-            <span>{isPt ? 'Grimório de Codificação' : 'Coding Grimoire'}</span>
-          </div>
-
           <h1 className="font-cinzel text-3xl md:text-5xl text-zinc-100 font-bold tracking-wider mb-4">
             {isPt ? 'Métricas & Produtividade' : 'Metrics & Productivity'}
           </h1>
