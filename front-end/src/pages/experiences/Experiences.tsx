@@ -4,6 +4,7 @@ import { getExperiences } from "@/services/experienceService";
 import Navbar from '@/components/navbar/Navbar';
 import { ExperienceCard } from '@/components/experience-card/ExperienceCard';
 import { Briefcase, Calendar, ChevronRight } from 'lucide-react';
+import { Curriculo } from '@/components/resume/Resume';
 import './experiences.css';
 
 interface ExperienceProps {
@@ -73,7 +74,7 @@ function Experiences({ language = 'pt' }: ExperienceProps) {
 
           <h1 className="font-cinzel text-3xl md:text-5xl text-zinc-100 font-bold tracking-wider mb-4">
             {isPt ? 'Linha do Tempo' : 'Career Timeline'}
-          </h1>
+          </h1> 
           <p className="max-w-2xl mx-auto text-zinc-400 text-sm md:text-base leading-relaxed">
             {isPt 
               ? 'Cada fase representa um marco de evolução técnica, liderança prática e impacto em produtos reais. Clique em um marco para ver os detalhes.' 
@@ -224,6 +225,17 @@ function Experiences({ language = 'pt' }: ExperienceProps) {
             {isPt ? 'Nenhuma experiência cadastrada até o momento.' : 'No experiences recorded yet.'}
           </div>
         )}
+
+        {/* Seção Currículo */}
+        <section className="mt-16">
+          <header className="text-center mb-8">
+            <h2 className="font-cinzel text-5xl text-zinc-100 font-semibold">
+              {isPt ? 'Currículo' : 'Resume'}
+            </h2>
+          </header>
+          <Curriculo language={language} />
+        </section>
+
       </main>
 
       {/* Modal de Detalhes da Experiência */}
@@ -234,6 +246,7 @@ function Experiences({ language = 'pt' }: ExperienceProps) {
           language={language}
         />
       )}
+
     </div>
   );
 }

@@ -1,0 +1,12 @@
+.resume-container { display: flex; flex-direction: column; gap: 0.5rem; max-width: 920px; margin: 0 auto; width: 100%; }
+.cv-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid #333; border-radius: 0.5rem; background: #111; }
+.cv-titulo { font-weight: 600; color: #fff; }
+.cv-paginas { margin-left: 0.5rem; font-size: 0.8rem; color: #aaa; }
+.cv-zoom, .cv-acoes { display: flex; gap: 0.25rem; align-items: center; }
+.cv-botao { padding: 0.25rem 0.5rem; border: 1px solid #444; border-radius: 0.25rem; color: #fff; text-decoration: none; background: #222; }
+.cv-botao.principal { background: #f59e0b; color: #000; }
+.cv-area { overflow: auto; padding: 0.5rem; border: 1px solid #333; border-radius: 0.5rem; min-height: 300px; max-height: 88vh; background: #0a0a0a; }
+.cv-pagina { margin-bottom: 0.5rem; }
+.cv-aviso { color: #aaa; text-align: center; padding: 1rem; }
+.cv-spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid #555; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
